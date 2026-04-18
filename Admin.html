@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – The North Indian Lunch Box</title>
+<style>
+:root{
+  --saffron:#E8631A;--saffron-dark:#C94E08;--saffron-light:#FFF3EE;
+  --green:#2D6A4F;--green-light:#D8F3DC;
+  --gold:#F9A825;--gold-light:#FFF8E1;
+  --dark:#1C1008;--dark2:#2D2012;
+  --gray:#6B7280;--light:#F3F4F6;--border:#E5E7EB;
+  --card:#fff;--red:#DC2626;--red-light:#FEE2E2;
+  --blue:#1565C0;--blue-light:#E3F2FD;
+  --shadow:0 2px 8px rgba(0,0,0,.08);--shadow-lg:0 8px 24px rgba(0,0,0,.14);
+  --radius:12px;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--light);color:var(--dark);height:100vh;display:flex;flex-direction:column}
+button{cursor:pointer;border:none;font-family:inherit}
+input,textarea,select{font-family:inherit}
+
+/* ── LOGIN SCREEN ── */
+#loginScreen{
+  position:fixed;inset:0;background:var(--dark);z-index:1000;
+  display:flex;align-items:center;justify-content:center;
+}
+.login-box{
+  background:var(--card);border-radius:20px;padding:40px 32px;
+  width:min(380px,90vw);box-shadow:var(--shadow-lg);text-align:center;
+}
+.login-logo{font-size:48px;margin-bottom:8px}
+.login-title{font-size:22px;font-weight:800;margin-bottom:4px}
+.login-sub{font-size:14px;color:var(--gray);margin-bottom:24px}
+.pw-input{
+  width:100%;padding:13px 14px;border:1.5px solid var(--border);
+  border-radius:var(--radius);font-size:16px;outline:none;margin-bottom:12px;
+  transition:border .15s;
+}
+.pw-input:focus{border-color:var(--saffron)}
+.login-btn{
+  width:100%;padding:14px;background:var(--saffron);color:#fff;
+  font-size:16px;font-weight:700;border-radius:var(--radius);
+  transition:background .15s;
+}
+.login-btn:hover{background:var(--saffron-dark)}
+#loginError{color:var(--red);font-size:13px;margin-top:8px;display:none}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex:1;overflow:hidden}
+.sidebar{
+  width:var(--sidebar);background:var(--dark);color:#fff;
+  flex-shrink:0;display:flex;flex-direction:column;overflow-y:auto;
+}
+.sidebar-logo{
+  padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,.1);
+  font-weight:800;font-size:15px;display:flex;align-items:center;gap:10px;
+}
+.sidebar-logo span{font-size:24px}
+.sidebar-logo small{display:block;font-size:10px;opacity:.5;font-weight:400;margin-top:1px}
+.nav-group{padding:12px 8px 4px;font-size:10px;font-weight:700;opacity:.4;text-transform:uppercase;letter-spacing:.8px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;border-radius:var(--radius);margin:0 8px 2px;
+  font-size:14px;font-weight:500;color:rgba(255,255,255,.7);
+  cursor:pointer;transition:all .15s;
+}
+.nav-item:hover{background:rgba(255,255,255,.1);color:#fff}
+.nav-item.active{background:var(--saffron);color:#fff}
+.nav-item .icon{font-size:18px;width:24px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;opacity:.4;text-align:center}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{
+  background:var(--card);border-bottom:1px solid var(--border);
+  padding:14px 24px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;box-shadow:var(--shadow);
+}
+.page-title{font-size:20px;font-weight:800}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.refresh-badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--gray);background:var(--light);
+  padding:6px 12px;border-radius:50px;border:1px solid var(--border);
+}
+.refresh-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.content{flex:1;overflow-y:auto;padding:24px}
+
+/* ── CARDS ── */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{
+  background:var(--card);border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);border-left:4px solid var(--saffron);
+}
+.stat-label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.stat-value{font-size:28px;font-weight:800;color:var(--dark)}
+.stat-sub{font-size:12px;color:var(--gray);margin-top:4px}
+.stat-card.green{border-color:var(--green)}
+.stat-card.gold{border-color:var(--gold)}
+.stat-card.red{border-color:var(--red)}
+.stat-card.blue{border-color:var(--blue)}
+
+/* ── SECTION PANELS ── */
+.panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:20px}
+.panel-head{
+  padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.panel-title{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+.panel-body{padding:16px 20px}
+
+/* ── BUTTONS ── */
+.btn{padding:9px 16px;border-radius:var(--radius);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px;transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--saffron);color:#fff}
+.btn-primary:hover{background:var(--saffron-dark)}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#1B5038}
+.btn-red{background:var(--red);color:#fff}
+.btn-red:hover{background:#B91C1C}
+.btn-gray{background:var(--light);color:var(--gray);border:1px solid var(--border)}
+.btn-gray:hover{background:var(--border)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#0D47A1}
+.btn-gold{background:var(--gold);color:var(--dark)}
+.btn-gold:hover{background:#F57F17}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── TABLES ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--light);padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--saffron-light)}
+.custom-cell{background:var(--gold-light);font-style:italic;font-size:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:50px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-light);color:var(--green)}
+.badge-red{background:var(--red-light);color:var(--red)}
+.badge-gold{background:var(--gold-light);color:#7F5700}
+.no-data{padding:32px;text-align:center;color:var(--gray);font-size:14px}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px 20px;background:var(--light);border-bottom:1px solid var(--border)}
+.filter-btn{padding:6px 14px;border-radius:50px;font-size:13px;font-weight:600;background:var(--card);border:1.5px solid var(--border);color:var(--gray);cursor:pointer;transition:all .15s}
+.filter-btn.active{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.search-input{padding:7px 12px;border:1.5px solid var(--border);border-radius:50px;font-size:13px;outline:none;width:200px}
+.search-input:focus{border-color:var(--saffron)}
+
+/* ── MENU EDITOR ── */
+.menu-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.menu-day-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.menu-day-head{
+  padding:10px 12px;background:var(--dark);color:#fff;
+  font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between;
+}
+.menu-day-body{padding:12px}
+.menu-field{margin-bottom:10px}
+.menu-label{font-size:11px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.menu-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;outline:none;transition:border .15s}
+.menu-input:focus{border-color:var(--saffron)}
+.holiday-toggle{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:13px;cursor:pointer}
+.holiday-toggle input{accent-color:var(--saffron);width:16px;height:16px}
+.holiday-fields{display:none}
+.holiday-fields.show{display:block}
+
+/* ── IMAGE UPLOAD ── */
+.img-upload-wrap{position:relative}
+.img-upload-btn{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border:1.5px dashed var(--border);border-radius:8px;
+  font-size:12px;font-weight:600;color:var(--gray);
+  cursor:pointer;transition:all .15s;background:var(--light);width:100%;
+}
+.img-upload-btn:hover{border-color:var(--saffron);color:var(--saffron);background:var(--saffron-light)}
+.img-upload-btn.has-img{border-color:var(--green);color:var(--green);background:var(--green-light)}
+.img-preview{width:100%;height:80px;object-fit:cover;border-radius:8px;margin-top:6px;display:none}
+.img-preview.show{display:block}
+.file-input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* ── BREAKFAST / SNACK MENU EDITOR ── */
+.menu-items-list{display:grid;gap:10px}
+.menu-item-row{
+  display:grid;align-items:start;gap:10px;
+  background:var(--light);border-radius:var(--radius);padding:12px;
+  border:1px solid var(--border);
+}
+.meal-item-row{grid-template-columns:2fr 1fr 1fr auto auto}
+.snack-item-row{grid-template-columns:2fr 1fr auto auto}
+.bf-item-row{grid-template-columns:1fr 1fr 1fr auto auto}
+.day-items-section{margin-bottom:16px}
+.day-items-head{font-size:14px;font-weight:700;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+
+/* ── BILLING ── */
+.billing-grid{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+.customer-list{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;max-height:600px;display:flex;flex-direction:column}
+.customer-list-head{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+.customer-list-body{overflow-y:auto;flex:1}
+.customer-item{
+  padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;
+  transition:background .15s;display:flex;align-items:center;justify-content:space-between;
+}
+.customer-item:hover{background:var(--saffron-light)}
+.customer-item.active{background:var(--saffron-light);border-left:3px solid var(--saffron)}
+.customer-item-name{font-size:14px;font-weight:600}
+.customer-item-phone{font-size:12px;color:var(--gray)}
+.customer-item-amount{font-size:14px;font-weight:700;color:var(--saffron)}
+
+.bill-detail{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow)}
+.bill-detail-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.bill-section{padding:12px 20px;border-bottom:1px solid var(--border)}
+.bill-section-title{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.bill-row{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.bill-row.total{font-size:15px;font-weight:700;border-top:1px solid var(--border);margin-top:6px;padding-top:8px}
+.bill-actions{padding:16px 20px;display:flex;gap:10px;flex-wrap:wrap}
+.wa-btn{background:#25D366;color:#fff}
+.wa-btn:hover{background:#1DA851}
+.paid-badge{background:var(--green-light);color:var(--green);padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700}
+
+/* ── EXPENSES ── */
+.expense-grid{display:grid;grid-template-columns:1fr 2fr;gap:20px;align-items:start}
+.add-expense-form{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.expense-row{
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;
+  gap:8px;align-items:center;padding:10px;
+  background:var(--light);border-radius:var(--radius);margin-bottom:8px;font-size:13px;
+}
+
+/* ── REVENUE ── */
+.profit-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.profit-card{background:var(--card);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);text-align:center}
+.profit-card .amount{font-size:28px;font-weight:800;margin-bottom:4px}
+.profit-card .label{font-size:12px;color:var(--gray);font-weight:600;text-transform:uppercase}
+.profit-card.profit .amount{color:var(--green)}
+.profit-card.revenue .amount{color:var(--blue)}
+.profit-card.expense .amount{color:var(--red)}
+
+/* ── PROMOTIONS ── */
+.promo-editor{display:grid;gap:12px}
+.promo-row{
+  background:var(--light);border-radius:var(--radius);padding:16px;
+  display:grid;grid-template-columns:auto 1fr 1fr auto auto;gap:12px;align-items:center;
+  border:1px solid var(--border);
+}
+
+/* ── DELIVERY ── */
+.delivery-form{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end}
+.delivery-table-wrap{margin-top:16px}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;top:20px;right:20px;z-index:2000;
+  background:var(--dark);color:#fff;padding:12px 20px;
+  border-radius:50px;font-size:14px;font-weight:600;
+  opacity:0;transform:translateY(-10px);transition:all .3s;pointer-events:none;
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+
+/* ── MISC ── */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--gray);margin-bottom:5px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.form-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;transition:border .15s}
+.form-input:focus{border-color:var(--saffron)}
+.form-select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:var(--card)}
+.section-hidden{display:none}
+.week-badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green);padding:4px 12px;border-radius:50px;font-size:12px;font-weight:700}
+.alert-box{padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:16px;border:1px solid}
+.alert-info{background:var(--blue-light);border-color:#90CAF9;color:#0D47A1}
+.alert-gold{background:var(--gold-light);border-color:#FFD54F;color:#7F5700}
+
+/* ── HAMBURGER BUTTON ── */
+.hamburger-btn{
+  display:none;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:8px;
+  background:transparent;color:var(--dark);font-size:22px;
+  cursor:pointer;border:none;margin-right:10px;flex-shrink:0;
+}
+.hamburger-btn:hover{background:var(--light)}
+
+/* ── DESKTOP-ONLY LAYOUT ── */
+/* Admin panel is designed for desktop. Enforce minimum width so all columns
+   and panels always display correctly regardless of screen size. */
+html { min-width: 1100px; }
+body { min-width: 1100px; }
+
+/* Sidebar overlay hidden — not used in desktop mode */
+#sidebarOverlay { display: none !important; }
+
+/* Hamburger hidden — sidebar always visible on desktop */
+.hamburger-btn { display: none !important; }
+.sidebar-close  { display: none !important; }
+
+/* Sidebar always pinned */
+.sidebar {
+  position: relative;
+  transform: none !important;
+  width: var(--sidebar);
+}
+
+/* Tables always render at comfortable desktop density */
+table { font-size: 13px; }
+th, td { padding: 10px 12px; }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🍛</div>
+    <div class="login-title">Admin Dashboard</div>
+    <div class="login-sub">The North Indian Lunch Box</div>
+    <input class="pw-input" type="password" id="pwInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Unlock Dashboard</button>
+    <div id="loginError">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- ── SIDEBAR OVERLAY ── -->
+<div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- ── MAIN APP ── -->
+<div id="app" style="display:none">
+  <!-- Sidebar -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-close"><button class="sidebar-close-btn" onclick="closeSidebar()" title="Close menu">✕</button></div>
+    <div class="sidebar-logo"><span>🍛</span><div>Admin<small>North Indian Lunch Box</small></div></div>
+    <div class="nav-group">Overview</div>
+    <div class="nav-item active" onclick="showTab('overview')" id="nav-overview"><span class="icon">📊</span> Overview</div>
+    <div class="nav-group">Orders</div>
+    <div class="nav-item" onclick="showTab('orders')" id="nav-orders"><span class="icon">📋</span> View Orders</div>
+    <div class="nav-group">Menu</div>
+    <div class="nav-item" onclick="showTab('meals-menu')" id="nav-meals-menu"><span class="icon">🍛</span> Meals Menu</div>
+    <div class="nav-item" onclick="showTab('breakfast-menu')" id="nav-breakfast-menu"><span class="icon">🍳</span> Breakfast Menu</div>
+    <div class="nav-item" onclick="showTab('snacks-menu')" id="nav-snacks-menu"><span class="icon">🍪</span> Snacks Menu</div>
+    <div class="nav-item" onclick="showTab('promotions')" id="nav-promotions"><span class="icon">📣</span> Promotions</div>
+    <div class="nav-group">Billing</div>
+    <div class="nav-item" onclick="showTab('delivery')" id="nav-delivery"><span class="icon">🚚</span> Delivery Charges</div>
+    <div class="nav-item" onclick="showTab('billing')" id="nav-billing"><span class="icon">💰</span> Generate Bills</div>
+    <div class="nav-group">Finance</div>
+    <div class="nav-item" onclick="showTab('revenue')" id="nav-revenue"><span class="icon">📈</span> Revenue & Profit</div>
+    <div class="nav-item" onclick="showTab('expenses')" id="nav-expenses"><span class="icon">🧾</span> Expenses</div>
+    <div class="nav-group">Settings</div>
+    <div class="nav-item" onclick="showTab('settings')" id="nav-settings"><span class="icon">⚙️</span> Settings</div>
+    <div class="sidebar-footer">Auto bill-lock: Friday 10 PM</div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger-btn" onclick="toggleSidebar()" title="Menu">⋮</button>
+      <div class="page-title" id="pageTitle">Overview</div>
+      <div class="topbar-actions">
+        <div class="refresh-badge" id="refreshBadge">
+          <div class="refresh-dot"></div>
+          <span id="refreshLabel">Refreshing in 30s</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="forceRefresh()">↻ Refresh</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ════ OVERVIEW TAB ════ -->
+      <div id="tab-overview">
+        <div class="stat-grid" id="overviewStats">
+          <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="st-total">—</div><div class="stat-sub">This week</div></div>
+          <div class="stat-card green"><div class="stat-label">Revenue</div><div class="stat-value" id="st-revenue">—</div><div class="stat-sub">Orders total</div></div>
+          <div class="stat-card gold"><div class="stat-label">Customers</div><div class="stat-value" id="st-customers">—</div><div class="stat-sub">Unique this week</div></div>
+          <div class="stat-card blue"><div class="stat-label">Week Status</div><div class="stat-value" id="st-status" style="font-size:18px">—</div><div class="stat-sub" id="st-week">—</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">🍛 Meals</div></div>
+            <div class="panel-body" id="overviewMeals"><p style="color:var(--gray)">Loading...</p></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">🍳 Breakfast</div></div>
+            <div class="panel-body" id="overviewBreakfast"><p style="color:var(--gray)">Loading...</p></div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div class="panel-title">🍪 Snacks</div></div>
+            <div class="panel-body" id="overviewSnacks"><p style="color:var(--gray)">Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ ORDERS TAB ════ -->
+      <div id="tab-orders" class="section-hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📋 All Orders</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span id="lastRefreshedLabel" style="font-size:12px;color:var(--gray);align-self:center"></span>
+              <button class="btn btn-gray btn-sm" onclick="loadOrders()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="filter-bar">
+            <span style="font-size:12px;font-weight:600;color:var(--gray)">Day:</span>
+            <button class="filter-btn active" onclick="filterDay('All',this)">All</button>
+            <button class="filter-btn" onclick="filterDay('Monday',this)">Mon</button>
+            <button class="filter-btn" onclick="filterDay('Tuesday',this)">Tue</button>
+            <button class="filter-btn" onclick="filterDay('Wednesday',this)">Wed</button>
+            <button class="filter-btn" onclick="filterDay('Thursday',this)">Thu</button>
+            <button class="filter-btn" onclick="filterDay('Friday',this)">Fri</button>
+            <input class="search-input" placeholder="🔍 Search customer..." oninput="filterSearch(this.value)" id="orderSearch">
+          </div>
+
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div class="panel-title" style="margin-bottom:10px">🌞 Lunch Orders <span id="lunchCount" class="badge badge-gold"></span></div>
+            <div class="table-wrap"><table id="lunchTable">
+              <thead><tr><th>Time</th><th>Customer</th><th>Phone</th><th>Day</th><th>Items</th><th>Price</th><th>Customization</th><th>Final</th><th>Action</th></tr></thead>
+              <tbody id="lunchBody"><tr><td colspan="9" class="no-data">Loading...</td></tr></tbody>
+            </table></div>
+          </div>
+
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div class="panel-title" style="margin-bottom:10px">🌙 Dinner Orders <span id="dinnerCount" class="badge badge-green"></span></div>
+            <div class="table-wrap"><table id="dinnerTable">
+              <thead><tr><th>Time</th><th>Customer</th><th>Phone</th><th>Day</th><th>Items</th><th>Price</th><th>Customization</th><th>Final</th><th>Action</th></tr></thead>
+              <tbody id="dinnerBody"><tr><td colspan="9" class="no-data">Loading...</td></tr></tbody>
+            </table></div>
+          </div>
+
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div class="panel-title" style="margin-bottom:10px">🍳 Breakfast Orders <span id="bfCount" class="badge badge-gold"></span></div>
+            <div class="table-wrap"><table id="breakfastTable">
+              <thead><tr><th>Time</th><th>Customer</th><th>Phone</th><th>Day</th><th>Item</th><th>Size</th><th>Price</th><th>Action</th></tr></thead>
+              <tbody id="breakfastBody"><tr><td colspan="8" class="no-data">Loading...</td></tr></tbody>
+            </table></div>
+          </div>
+
+          <div style="padding:16px 20px">
+            <div class="panel-title" style="margin-bottom:10px">🍪 Snack Orders <span id="snackCount" class="badge badge-gold"></span></div>
+            <div class="table-wrap"><table id="snacksTable">
+              <thead><tr><th>Time</th><th>Customer</th><th>Phone</th><th>Item</th><th>Qty</th><th>Per Pack</th><th>Total</th><th>Action</th></tr></thead>
+              <tbody id="snacksBody"><tr><td colspan="8" class="no-data">Loading...</td></tr></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ MEALS MENU TAB ════ -->
+      <div id="tab-meals-menu" class="section-hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🍛 Weekly Meals Menu</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-gray" onclick="loadMealsMenuFromSheet()">↻ Load Saved</button>
+              <button class="btn btn-primary" onclick="saveMenu()">💾 Save Menu</button>
+              <button class="btn btn-green" onclick="deployMenu()">🚀 Deploy to Customers</button>
+              <button class="btn btn-red" onclick="closeWeek()">🔒 Close Week</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="alert-box alert-info">
+              <b>ℹ️ Menu Flow:</b> Save → Deploy (makes visible to customers) → Friday 10 PM auto-locks.
+            </div>
+            <div class="form-group" style="max-width:200px">
+              <label class="form-label">Week Label (e.g. MAY 5-9)</label>
+              <input class="form-input" type="text" id="weekOfInput" placeholder="MAY 5-9">
+            </div>
+            <div class="menu-grid" id="mealsMenuGrid">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ BREAKFAST MENU TAB ════ -->
+      <div id="tab-breakfast-menu" class="section-hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🍳 Breakfast Menu (Day-specific)</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" onclick="saveBreakfastMenu()">💾 Save Breakfast Menu</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="alert-box alert-gold">Different items can be set for each day. Upload images directly from your PC.</div>
+            <div id="breakfastMenuEditor"><!-- Rendered by JS --></div>
+            <button class="btn btn-gray" onclick="addBreakfastItem(null)" style="margin-top:8px">+ Add Item to All Days</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ SNACKS MENU TAB ════ -->
+      <div id="tab-snacks-menu" class="section-hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">🍪 Snacks Menu</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-gray" onclick="addSnackItem()">+ Add Snack</button>
+              <button class="btn btn-primary" onclick="saveSnacksMenu()">💾 Save Snacks Menu</button>
+            </div>
+          </div>
+          <div class="panel-body" id="snacksMenuEditor"><!-- Rendered by JS --></div>
+        </div>
+      </div>
+
+      <!-- ════ PROMOTIONS TAB ════ -->
+      <div id="tab-promotions" class="section-hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📣 Promotions & Flash Ads</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-gray" onclick="addPromoItem()">+ Add Promo</button>
+              <button class="btn btn-primary" onclick="savePromos()">💾 Save Promotions</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="alert-box alert-info">Promotions appear as a carousel at the top of the customer order page.</div>
+            <div id="promosEditor"><!-- Rendered by JS --></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ DELIVERY CHARGES TAB ════ -->
+      <div id="tab-delivery" class="section-hidden">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-title">🚚 Delivery Charges</div></div>
+          <div class="panel-body">
+            <div class="alert-box alert-info">Enter the total delivery cost for a day/meal. It will automatically be split equally among all customers who ordered that day.</div>
+            <div class="delivery-form">
+              <div class="form-group">
+                <label class="form-label">Day</label>
+                <select class="form-select" id="delDay">
+                  <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                  <option>Thursday</option><option>Friday</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Meal Type</label>
+                <select class="form-select" id="delMeal">
+                  <option>Lunch</option><option>Dinner</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Total Delivery (₹)</label>
+                <input class="form-input" type="number" id="delAmount" placeholder="e.g. 60">
+              </div>
+              <button class="btn btn-primary" onclick="addDelivery()">Add & Split</button>
+            </div>
+            <div class="delivery-table-wrap">
+              <div class="panel-title" style="margin-bottom:10px">Current Week Splits</div>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Day</th><th>Meal</th><th>Customer</th><th>Phone</th><th>Amount</th><th>Edit</th></tr></thead>
+                <tbody id="deliveryBody"><tr><td colspan="6" class="no-data">Loading...</td></tr></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ BILLING TAB ════ -->
+      <div id="tab-billing" class="section-hidden">
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-head">
+            <div class="panel-title">💰 Weekly Bills</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+              <select class="form-select" id="weekSelector" onchange="loadBillsForWeek(this.value)" style="width:160px"></select>
+              <button class="btn btn-gray" onclick="previewCurrentBills()">👁 Preview Bills</button>
+              <button class="btn btn-red" onclick="lockBillsNow()">🔒 Lock & Store Bills</button>
+              <button class="btn btn-gold" onclick="sendWhatsAppBulk()" style="background:#25D366;color:#fff">📲 WhatsApp All Bills</button>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="alert-box alert-info">Bills auto-lock every <b>Friday at 10 PM</b>. Each week is independent — unpaid prior weeks don't affect current week's calculations. Consolidated view shows all unpaid weeks.</div>
+          </div>
+        </div>
+        <div class="billing-grid">
+          <div class="customer-list">
+            <div class="customer-list-head">
+              <span>Customers</span>
+              <span id="customerCount" class="badge badge-gold">0</span>
+            </div>
+            <div style="padding:8px">
+              <input class="search-input" style="width:100%;border-radius:8px" placeholder="🔍 Search..." oninput="filterCustomers(this.value)">
+            </div>
+            <div class="customer-list-body" id="customerListBody"></div>
+          </div>
+          <div class="bill-detail" id="billDetail">
+            <div class="no-data" style="padding:60px">
+              <div style="font-size:40px;margin-bottom:12px">👈</div>
+              Select a customer to view their bill
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ REVENUE TAB ════ -->
+      <div id="tab-revenue" class="section-hidden">
+        <div class="profit-cards" id="profitCards">
+          <div class="profit-card revenue"><div class="amount" id="pc-revenue">₹0</div><div class="label">Revenue</div></div>
+          <div class="profit-card expense"><div class="amount" id="pc-expense">₹0</div><div class="label">Expenses</div></div>
+          <div class="profit-card profit"><div class="amount" id="pc-profit">₹0</div><div class="label">Profit</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-title">📈 Revenue History</div>
+            <select class="form-select" id="revenueMonth" onchange="loadRevenue(this.value)" style="width:160px">
+              <option value="">All Months</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Paid At</th><th>Customer</th><th>Phone</th><th>Week</th><th>Orders</th><th>Carry-fwd</th><th>Total Paid</th></tr></thead>
+              <tbody id="revenueBody"><tr><td colspan="7" class="no-data">Loading...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ EXPENSES TAB ════ -->
+      <div id="tab-expenses" class="section-hidden">
+        <div class="expense-grid">
+          <div class="add-expense-form">
+            <div class="panel-title" style="margin-bottom:16px">🧾 Add Expense</div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="expCategory">
+                <option>Ingredients</option><option>Packaging</option>
+                <option>Delivery</option><option>Gas/Fuel</option>
+                <option>Equipment</option><option>Miscellaneous</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description</label>
+              <input class="form-input" type="text" id="expDesc" placeholder="What was bought?">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount (₹)</label>
+              <input class="form-input" type="number" id="expAmount" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input class="form-input" type="date" id="expDate">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="addExpense()">+ Record Expense</button>
+          </div>
+          <div>
+            <div class="panel">
+              <div class="panel-head">
+                <div class="panel-title">All Expenses</div>
+                <select class="form-select" id="expenseMonth" onchange="loadExpenses(this.value)" style="width:160px">
+                  <option value="">All Months</option>
+                </select>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th><th>Actions</th></tr></thead>
+                  <tbody id="expensesBody"><tr><td colspan="5" class="no-data">Loading...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ SETTINGS TAB ════ -->
+      <div id="tab-settings" class="section-hidden">
+        <div class="panel" style="max-width:520px">
+          <div class="panel-head"><div class="panel-title">⚙️ Settings & Maintenance</div></div>
+          <div class="panel-body">
+            <div class="alert-box alert-gold" style="margin-bottom:20px">
+              ⚠️ These actions are irreversible. Use with caution.
+            </div>
+
+            <div style="border:1.5px solid var(--red-light);border-radius:var(--radius);padding:20px;background:var(--red-light)">
+              <div style="font-weight:800;font-size:15px;color:var(--red);margin-bottom:6px">🗑️ Clear All Order Data</div>
+              <div style="font-size:13px;color:var(--gray);margin-bottom:16px">
+                Wipes all Orders, Breakfast Orders, Snack Orders, Bills, Revenue History, and Expenses from the spreadsheet.
+                Menu items and customer accounts are <b>preserved</b>.
+              </div>
+              <button class="btn btn-red" onclick="clearAllData()">Clear All Data</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end content -->
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzF_C4bVh3bAwFUppsr5JSO5qMXjD9MvDtg9aFSIxmyd4tFyPcmyHmMNa5GA6vRnH4vGA/exec'; // ← GAS Web App URL
+const LOCAL_ADMIN_PASSWORD = '3110'; // ← Change this to match CONFIG.ADMIN_PASSWORD in Code.gs
+let ADMIN_PASSWORD = '';
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let allMeals = [], allSnacks = [], allBreakfasts = [];
+let allBills = [];
+let currentDay = 'All';
+let refreshInterval;
+let refreshCountdown = 30;
+let snacksMenuData = [];
+let breakfastMenuData = {};
+let promosData = [];
+let selectedBillCustomer = null;
+let currentWeekLabel = '';
+let billingData = {};
+
+// ════════════════════════════════════════
+// API
+// ════════════════════════════════════════
+async function api(action, params = {}) {
+  // Don't overwrite adminPassword if it was explicitly passed (e.g. during login)
+  if (!params.adminPassword) params.adminPassword = ADMIN_PASSWORD;
+  if (!GAS_URL) {
+    throw new Error('⚠️ GAS_URL not set. Paste your Google Apps Script URL in Admin.html (line 2 of the script section).');
+  }
+  const resp = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ action, params }),
+    redirect: 'follow'
+  });
+  const data = await resp.json();
+  if (!data.success) throw new Error(data.error || 'Request failed');
+  return data.data;
+}
+
+// ════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════
+async function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (!pw) return;
+  // Check password locally — no GAS call needed for login
+  if (pw !== LOCAL_ADMIN_PASSWORD) {
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  ADMIN_PASSWORD = pw;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  initApp();
+}
+document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+function initApp() {
+  showTab('overview');
+  renderMealsMenuGrid();
+  renderBreakfastMenuEditor();
+  renderSnacksMenuEditor();
+  renderPromosEditor();
+  document.getElementById('expDate').value = new Date().toISOString().split('T')[0];
+  startAutoRefresh();
+}
+
+// ════════════════════════════════════════
+// TAB NAVIGATION
+// ════════════════════════════════════════
+const TAB_TITLES = {
+  'overview':'Overview','orders':'View Orders',
+  'meals-menu':'Meals Menu','breakfast-menu':'Breakfast Menu',
+  'snacks-menu':'Snacks Menu','promotions':'Promotions',
+  'delivery':'Delivery Charges','billing':'Generate Bills',
+  'revenue':'Revenue & Profit','expenses':'Expenses',
+  'settings':'Settings'
+};
+
+function showTab(tab) {
+  document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.add('section-hidden'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.remove('section-hidden');
+  document.getElementById(`nav-${tab}`)?.classList.add('active');
+  document.getElementById('pageTitle').textContent = TAB_TITLES[tab] || tab;
+
+  // Load data for tab
+  if (tab==='overview') loadOverview();
+  else if (tab==='orders') loadOrders();
+  else if (tab==='meals-menu') loadMealsMenuFromSheet();
+  else if (tab==='breakfast-menu') loadBreakfastMenuFromSheet();
+  else if (tab==='snacks-menu') loadSnacksMenuFromSheet();
+  else if (tab==='promotions') loadPromosFromSheet();
+  else if (tab==='delivery') loadDelivery();
+  else if (tab==='billing') initBilling();
+  else if (tab==='revenue') loadRevenue();
+  else if (tab==='expenses') loadExpenses();
+
+  // On mobile, close sidebar after navigation
+  closeSidebar();
+}
+
+// ════════════════════════════════════════
+// MOBILE SIDEBAR
+// ════════════════════════════════════════
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  const isOpen  = sidebar.classList.contains('open');
+  if (isOpen) {
+    closeSidebar();
+  } else {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+  }
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebarOverlay')?.classList.remove('active');
+}
+
+// ════════════════════════════════════════
+// CLEAR ALL DATA
+// ════════════════════════════════════════
+async function clearAllData() {
+  const confirmed = confirm(
+    '⚠️ This will permanently delete ALL orders, bills, revenue history, and expenses.\n\n' +
+    'Menu items and customer accounts will be preserved.\n\n' +
+    'Are you absolutely sure?'
+  );
+  if (!confirmed) return;
+  const confirmed2 = confirm('Last warning! This cannot be undone. Proceed?');
+  if (!confirmed2) return;
+
+  try {
+    const result = await api('clearAllData');
+    showToast(result.message, 'success');
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+// ════════════════════════════════════════
+// AUTO REFRESH
+// ════════════════════════════════════════
+function startAutoRefresh() {
+  clearInterval(refreshInterval);
+  refreshCountdown = 30;
+  refreshInterval = setInterval(() => {
+    refreshCountdown--;
+    document.getElementById('refreshLabel').textContent = `Refreshing in ${refreshCountdown}s`;
+    if (refreshCountdown <= 0) {
+      forceRefresh();
+      refreshCountdown = 30;
+    }
+  }, 1000);
+}
+
+function forceRefresh() {
+  const active = document.querySelector('.nav-item.active')?.id.replace('nav-','');
+  if (active) showTab(active);
+  refreshCountdown = 30;
+  document.getElementById('refreshLabel').textContent = 'Refreshing in 30s';
+}
+
+// ════════════════════════════════════════
+// OVERVIEW
+// ════════════════════════════════════════
+async function loadOverview() {
+  try {
+    const [meals, snacks, breakfasts, weekStatus] = await Promise.all([
+      api('getAllOrders'), api('getAllSnackOrders'), api('getAllBreakfastOrders'), api('checkWeekStatus')
+    ]);
+
+    const customers = new Set([...meals, ...snacks, ...breakfasts].map(o => o.phone));
+    const mealRevenue = meals.reduce((s,o)=>s+Number(o.finalPrice||0),0);
+    const snackRevenue = snacks.reduce((s,o)=>s+Number(o.total||0),0);
+    const bfRevenue = breakfasts.reduce((s,o)=>s+Number(o.price||0),0);
+
+    document.getElementById('st-total').textContent = meals.length + snacks.length + breakfasts.length;
+    document.getElementById('st-revenue').textContent = `₹${mealRevenue+snackRevenue+bfRevenue}`;
+    document.getElementById('st-customers').textContent = customers.size;
+    document.getElementById('st-status').textContent = weekStatus.isDeployed ? '🟢 Open' : '🔴 Closed';
+    document.getElementById('st-week').textContent = weekStatus.currentWeek;
+
+    // Breakdown by day
+    const dayBreakdown = {};
+    ['Monday','Tuesday','Wednesday','Thursday','Friday'].forEach(d => { dayBreakdown[d]={lunch:0,dinner:0}; });
+    meals.forEach(o => { if(dayBreakdown[o.day]) dayBreakdown[o.day][o.mealType.toLowerCase()]++; });
+
+    document.getElementById('overviewMeals').innerHTML = Object.entries(dayBreakdown)
+      .map(([d,v])=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border)">
+        <span>${d.slice(0,3)}</span>
+        <span>🍛 ${v.lunch} Lunch · ${v.dinner} Dinner</span>
+      </div>`).join('');
+
+    document.getElementById('overviewBreakfast').innerHTML = breakfasts.length === 0
+      ? '<p style="color:var(--gray);font-size:13px">No breakfast orders</p>'
+      : `<p style="font-size:13px">${breakfasts.length} breakfast order(s) · ₹${bfRevenue}</p>`;
+
+    document.getElementById('overviewSnacks').innerHTML = snacks.length === 0
+      ? '<p style="color:var(--gray);font-size:13px">No snack orders</p>'
+      : `<p style="font-size:13px">${snacks.length} order(s) · ₹${snackRevenue}</p>`;
+
+  } catch(e) { showToast('Failed to load overview: '+e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// ORDERS
+// ════════════════════════════════════════
+async function loadOrders() {
+  try {
+    [allMeals, allSnacks, allBreakfasts] = await Promise.all([
+      api('getAllOrders'), api('getAllSnackOrders'), api('getAllBreakfastOrders')
+    ]);
+    renderOrderTables();
+    document.getElementById('lastRefreshedLabel').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN');
+  } catch(e) { showToast('Failed to load orders: '+e.message, 'error'); }
+}
+
+function renderOrderTables() {
+  const q = (document.getElementById('orderSearch')?.value||'').toLowerCase();
+  const filterFn = o => (currentDay==='All'||o.day===currentDay) &&
+                        (!q||(o.customerName||'').toLowerCase().includes(q)||(o.phone||'').includes(q));
+
+  const meals = allMeals.filter(filterFn);
+  const bfs   = allBreakfasts.filter(filterFn);
+  const snks  = allSnacks.filter(o=>!q||(o.customerName||'').toLowerCase().includes(q)||(o.phone||'').includes(q));
+
+  const lunches = meals.filter(o => o.mealType === 'Lunch');
+  const dinners  = meals.filter(o => o.mealType === 'Dinner');
+
+  document.getElementById('lunchCount').textContent = lunches.length;
+  document.getElementById('dinnerCount').textContent = dinners.length;
+  document.getElementById('bfCount').textContent = bfs.length;
+  document.getElementById('snackCount').textContent = snks.length;
+
+  const mealRowHtml = o => `
+    <tr>
+      <td style="white-space:nowrap">${o.timestamp}</td>
+      <td><b>${o.customerName}</b></td>
+      <td>${o.phone}</td>
+      <td>${o.day}</td>
+      <td style="max-width:200px;font-size:12px">${o.items}</td>
+      <td>₹${o.basePrice}</td>
+      <td class="${o.customization?'custom-cell':''}">${o.customization||'—'}</td>
+      <td><b>₹${o.finalPrice}</b></td>
+      <td><button class="btn btn-red btn-sm" onclick="cancelOrder('${o.id}','meal')">✕ Cancel</button></td>
+    </tr>`;
+
+  document.getElementById('lunchBody').innerHTML = lunches.length
+    ? lunches.map(mealRowHtml).join('')
+    : '<tr><td colspan="9" class="no-data">No lunch orders</td></tr>';
+
+  document.getElementById('dinnerBody').innerHTML = dinners.length
+    ? dinners.map(mealRowHtml).join('')
+    : '<tr><td colspan="9" class="no-data">No dinner orders</td></tr>';
+
+  document.getElementById('breakfastBody').innerHTML = bfs.length ? bfs.map(o=>`
+    <tr>
+      <td style="white-space:nowrap">${o.timestamp}</td>
+      <td><b>${o.customerName}</b></td>
+      <td>${o.phone}</td>
+      <td>${o.day}</td>
+      <td>${o.itemName}</td>
+      <td><span class="badge badge-gold">${o.size}</span></td>
+      <td>₹${o.price}</td>
+      <td><button class="btn btn-red btn-sm" onclick="cancelOrder('${o.id}','breakfast')">✕ Cancel</button></td>
+    </tr>`).join('') : '<tr><td colspan="8" class="no-data">No breakfast orders</td></tr>';
+
+  document.getElementById('snacksBody').innerHTML = snks.length ? snks.map(o=>`
+    <tr>
+      <td style="white-space:nowrap">${o.timestamp}</td>
+      <td><b>${o.customerName}</b></td>
+      <td>${o.phone}</td>
+      <td>${o.item}</td>
+      <td>${o.quantity}</td>
+      <td>₹${o.pricePerPack}</td>
+      <td><b>₹${o.total}</b></td>
+      <td><button class="btn btn-red btn-sm" onclick="cancelOrder('${o.id}','snack')">✕ Cancel</button></td>
+    </tr>`).join('') : '<tr><td colspan="8" class="no-data">No snack orders</td></tr>';
+}
+
+function filterDay(day, btn) {
+  currentDay = day;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrderTables();
+}
+
+function filterSearch(q) { renderOrderTables(); }
+
+async function cancelOrder(id, type) {
+  if (!confirm('Cancel this order? It will be removed from the sheet immediately.')) return;
+  try {
+    await api('cancelOrder', { orderId: id, orderType: type });
+    showToast('Order cancelled', 'success');
+    await loadOrders(); // Real-time refresh
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// MEALS MENU EDITOR
+// ════════════════════════════════════════
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+
+function renderMealsMenuGrid() {
+  document.getElementById('mealsMenuGrid').innerHTML = DAYS.map(day => `
+    <div class="menu-day-card">
+      <div class="menu-day-head">
+        <span>${day.slice(0,3)}</span>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;cursor:pointer">
+          <input type="checkbox" id="holiday-${day}" onchange="toggleHoliday('${day}')"> Holiday
+        </label>
+      </div>
+      <div class="menu-day-body">
+        <div class="holiday-fields" id="hf-${day}">
+          <div class="menu-field">
+            <label class="menu-label">Holiday Reason</label>
+            <input class="menu-input" type="text" id="holidayReason-${day}" placeholder="e.g. Holi holiday">
+          </div>
+          <div class="menu-field">
+            <label class="menu-label">Holiday Image</label>
+            <div class="img-upload-wrap">
+              <label class="img-upload-btn" id="holidayImgBtn-${day}">
+                <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(event,'holidayImgUrl-${day}','holidayImgPreview-${day}','holidayImgBtn-${day}')">
+                📁 Upload Image
+              </label>
+              <img id="holidayImgPreview-${day}" class="img-preview">
+              <input type="hidden" id="holidayImgUrl-${day}">
+            </div>
+          </div>
+        </div>
+        <div id="mealFields-${day}">
+          <div class="menu-field">
+            <label class="menu-label">🌞 Lunch Items</label>
+            <textarea class="menu-input" id="lunch-items-${day}" rows="2" placeholder="Dal, Chawal, Sabzi..."></textarea>
+          </div>
+          <div class="menu-field">
+            <label class="menu-label">Price (₹)</label>
+            <input class="menu-input" type="number" id="lunch-price-${day}" value="90">
+          </div>
+          <div class="menu-field">
+            <label class="menu-label">🌙 Dinner Items</label>
+            <textarea class="menu-input" id="dinner-items-${day}" rows="2" placeholder="Roti, Dal, Sabzi..."></textarea>
+          </div>
+          <div class="menu-field">
+            <label class="menu-label">Price (₹)</label>
+            <input class="menu-input" type="number" id="dinner-price-${day}" value="90">
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleHoliday(day) {
+  const isHoliday = document.getElementById(`holiday-${day}`).checked;
+  document.getElementById(`hf-${day}`).classList.toggle('show', isHoliday);
+  document.getElementById(`mealFields-${day}`).style.display = isHoliday ? 'none' : 'block';
+}
+
+async function loadMealsMenuFromSheet() {
+  try {
+    const menu = await api('getMenu');
+    if (menu.menuNotReady) { showToast('No saved menu found', ''); return; }
+    document.getElementById('weekOfInput').value = menu.weekOf || '';
+    DAYS.forEach(day => {
+      const d = menu.days[day];
+      if (!d) return;
+      if (d.holiday) {
+        document.getElementById(`holiday-${day}`).checked = true;
+        toggleHoliday(day);
+        document.getElementById(`holidayReason-${day}`).value = d.holidayReason || '';
+        if (d.holidayImageUrl) {
+          document.getElementById(`holidayImgUrl-${day}`).value = d.holidayImageUrl;
+          showImgPreview(`holidayImgPreview-${day}`, `holidayImgBtn-${day}`, d.holidayImageUrl);
+        }
+      } else {
+        if (d.lunch) { document.getElementById(`lunch-items-${day}`).value = d.lunch.items||''; document.getElementById(`lunch-price-${day}`).value = d.lunch.price||90; }
+        if (d.dinner) { document.getElementById(`dinner-items-${day}`).value = d.dinner.items||''; document.getElementById(`dinner-price-${day}`).value = d.dinner.price||90; }
+      }
+    });
+    showToast('Menu loaded', 'success');
+  } catch(e) { showToast('Failed: '+e.message, 'error'); }
+}
+
+async function saveMenu() {
+  const weekOf = document.getElementById('weekOfInput').value.trim();
+  if (!weekOf) { showToast('Enter a week label', 'error'); return; }
+  const days = {};
+  for (const day of DAYS) {
+    if (document.getElementById(`holiday-${day}`).checked) {
+      const imgData = document.getElementById(`holidayImgData-${day}`)?.value || '';
+      days[day] = { holiday:true, holidayReason:document.getElementById(`holidayReason-${day}`).value, holidayImageUrl:document.getElementById(`holidayImgUrl-${day}`).value, holidayImageData: imgData };
+    } else {
+      days[day] = {
+        lunch: { items:document.getElementById(`lunch-items-${day}`).value, price:Number(document.getElementById(`lunch-price-${day}`).value)||90 },
+        dinner: { items:document.getElementById(`dinner-items-${day}`).value, price:Number(document.getElementById(`dinner-price-${day}`).value)||90 }
+      };
+    }
+  }
+  try {
+    const r = await api('saveMenu', { menuData:{weekOf, days} });
+    showToast(r.message, 'success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function deployMenu() {
+  if(!confirm('Deploy menu? Customers will be able to see and order.')) return;
+  try { const r = await api('deployMenu'); showToast(r.message,'success'); } catch(e) { showToast(e.message,'error'); }
+}
+
+async function closeWeek() {
+  if(!confirm('Close the week? New orders will be paused.')) return;
+  try { await api('closeWeek'); showToast('Week closed','success'); } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════
+// IMAGE UPLOAD HELPER
+// ════════════════════════════════════════
+function handleImageUpload(event, urlId, previewId, btnId, dataId) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2*1024*1024) { showToast('Image too large (max 2MB)', 'error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    if (dataId) {
+      let el = document.getElementById(dataId);
+      if (!el) { el = document.createElement('input'); el.type='hidden'; el.id=dataId; event.target.closest('.img-upload-wrap').appendChild(el); }
+      el.value = dataUrl;
+    }
+    // Show preview immediately
+    showImgPreview(previewId, btnId, dataUrl);
+    // Upload to Drive
+    try {
+      const r = await api('uploadImage', { imageData: dataUrl, filename: file.name });
+      if (urlId) document.getElementById(urlId).value = r.url;
+      showToast('Image uploaded ✅', 'success');
+    } catch(e) { showToast('Upload failed: '+e.message,'error'); }
+  };
+  reader.readAsDataURL(file);
+}
+
+function showImgPreview(previewId, btnId, src) {
+  const prev = document.getElementById(previewId);
+  const btn  = document.getElementById(btnId);
+  if (prev) { prev.src=src; prev.classList.add('show'); }
+  if (btn)  { btn.classList.add('has-img'); btn.querySelector('span')||btn; }
+}
+
+// ════════════════════════════════════════
+// BREAKFAST MENU EDITOR
+// ════════════════════════════════════════
+function renderBreakfastMenuEditor() {
+  const container = document.getElementById('breakfastMenuEditor');
+  container.innerHTML = DAYS.map(day => `
+    <div class="day-items-section">
+      <div class="day-items-head">
+        <span>📅 ${day}</span>
+        <button class="btn btn-gray btn-sm" onclick="addBreakfastItem('${day}')">+ Add Item</button>
+      </div>
+      <div class="menu-items-list" id="bf-list-${day}">
+        <p style="color:var(--gray);font-size:13px;padding:4px 0">No items. Click + Add Item.</p>
+      </div>
+    </div>`).join('');
+}
+
+async function loadBreakfastMenuFromSheet() {
+  try {
+    const menu = await api('getBreakfastMenu');
+    breakfastMenuData = menu;
+    renderBreakfastMenuEditor();
+    DAYS.forEach(day => {
+      const items = menu[day] || [];
+      items.forEach(item => addBreakfastItem(day, item));
+    });
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+function addBreakfastItem(day, existing) {
+  const daysToAdd = day ? [day] : DAYS;
+  daysToAdd.forEach(d => {
+    const list = document.getElementById(`bf-list-${d}`);
+    if (!list) return;
+    // Clear placeholder
+    if (list.querySelector('p')) list.innerHTML='';
+    const id = `bfItem-${d}-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+    const imgId = `${id}-img`;
+    const prevId = `${id}-prev`;
+    const urlId = `${id}-url`;
+
+    const div = document.createElement('div');
+    div.className = 'menu-item-row bf-item-row';
+    div.id = id;
+    div.innerHTML = `
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Item Name</label>
+        <input class="form-input" type="text" id="${id}-name" value="${existing?.name||''}" placeholder="e.g. Poha">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Half Price (₹)</label>
+        <input class="form-input" type="number" id="${id}-half" value="${existing?.halfPrice||50}">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Full Price (₹)</label>
+        <input class="form-input" type="number" id="${id}-full" value="${existing?.fullPrice||90}">
+      </div>
+      <div class="form-group" style="margin:0">
+        <label class="form-label">Image</label>
+        <div class="img-upload-wrap">
+          <label class="img-upload-btn ${existing?.imageUrl?'has-img':''}" id="${imgId}">
+            <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(event,'${urlId}','${prevId}','${imgId}')">
+            ${existing?.imageUrl ? '✅ Image set' : '📁 Upload'}
+          </label>
+          <img id="${prevId}" class="img-preview ${existing?.imageUrl?'show':''}" src="${existing?.imageUrl||''}">
+          <input type="hidden" id="${urlId}" value="${existing?.imageUrl||''}">
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+        <button class="btn btn-red btn-sm" onclick="document.getElementById('${id}').remove()">✕</button>
+      </div>`;
+    list.appendChild(div);
+  });
+}
+
+async function saveBreakfastMenu() {
+  const items = {};
+  DAYS.forEach(day => {
+    items[day] = [];
+    document.querySelectorAll(`#bf-list-${day} .bf-item-row`).forEach(row => {
+      const id = row.id;
+      const name = document.getElementById(`${id}-name`)?.value.trim();
+      if (!name) return;
+      items[day].push({
+        name,
+        halfPrice: Number(document.getElementById(`${id}-half`)?.value)||50,
+        fullPrice: Number(document.getElementById(`${id}-full`)?.value)||90,
+        imageUrl: document.getElementById(`${id}-url`)?.value||'',
+        enabled: true
+      });
+    });
+  });
+  try {
+    const r = await api('updateBreakfastMenu', { items });
+    showToast(r.message,'success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════
+// SNACKS MENU EDITOR
+// ════════════════════════════════════════
+function renderSnacksMenuEditor() {
+  document.getElementById('snacksMenuEditor').innerHTML = '<div class="menu-items-list" id="snacks-list"></div>';
+}
+
+async function loadSnacksMenuFromSheet() {
+  try {
+    const snacks = await api('getSnackMenu');
+    snacksMenuData = snacks;
+    document.getElementById('snacks-list').innerHTML = '';
+    snacks.forEach(s => addSnackItem(s));
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+function addSnackItem(existing) {
+  const list = document.getElementById('snacks-list');
+  const id = `snackItem-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+  const div = document.createElement('div');
+  div.className = 'menu-item-row snack-item-row';
+  div.id = id;
+  div.innerHTML = `
+    <div><label class="form-label">Snack Name</label><input class="form-input" type="text" id="${id}-name" value="${existing?.name||''}" placeholder="e.g. Masala Kaju"></div>
+    <div><label class="form-label">Price/200gm (₹)</label><input class="form-input" type="number" id="${id}-price" value="${existing?.price||0}"></div>
+    <div>
+      <label class="form-label">Image</label>
+      <div class="img-upload-wrap">
+        <label class="img-upload-btn ${existing?.imageUrl?'has-img':''}" id="${id}-imgbtn">
+          <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(event,'${id}-url','${id}-prev','${id}-imgbtn')">
+          ${existing?.imageUrl ? '✅ Image set' : '📁 Upload'}
+        </label>
+        <img id="${id}-prev" class="img-preview ${existing?.imageUrl?'show':''}" src="${existing?.imageUrl||''}">
+        <input type="hidden" id="${id}-url" value="${existing?.imageUrl||''}">
+      </div>
+    </div>
+    <button class="btn btn-red btn-sm" style="align-self:flex-end" onclick="document.getElementById('${id}').remove()">✕ Remove</button>`;
+  list.appendChild(div);
+}
+
+async function saveSnacksMenu() {
+  const snacks = [];
+  document.querySelectorAll('#snacks-list .snack-item-row').forEach(row => {
+    const id = row.id;
+    const name = document.getElementById(`${id}-name`)?.value.trim();
+    if (!name) return;
+    snacks.push({ name, price: Number(document.getElementById(`${id}-price`)?.value)||0, imageUrl: document.getElementById(`${id}-url`)?.value||'' });
+  });
+  try {
+    const r = await api('updateSnackMenu', { snacks });
+    showToast(r.message,'success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+// ════════════════════════════════════════
+// PROMOTIONS EDITOR
+// ════════════════════════════════════════
+function renderPromosEditor() {
+  document.getElementById('promosEditor').innerHTML = '<div class="promo-editor" id="promos-list"></div>';
+}
+
+async function loadPromosFromSheet() {
+  try {
+    const promos = await api('getPromotions');
+    document.getElementById('promos-list').innerHTML='';
+    promos.forEach(p=>addPromoItem(p));
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+function addPromoItem(existing) {
+  const list = document.getElementById('promos-list');
+  const id = `promo-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;
+  const div = document.createElement('div');
+  div.className='menu-item-row';
+  div.style.gridTemplateColumns='2fr 3fr 1fr auto auto';
+  div.id=id;
+  div.innerHTML=`
+    <div><label class="form-label">Title</label><input class="form-input" type="text" id="${id}-title" value="${existing?.title||''}" placeholder="e.g. New Breakfast Items!"></div>
+    <div><label class="form-label">Description</label><input class="form-input" type="text" id="${id}-desc" value="${existing?.description||''}" placeholder="Short promotional text"></div>
+    <div><label class="form-label">Badge</label><input class="form-input" type="text" id="${id}-badge" value="${existing?.badgeText||'NEW'}" placeholder="NEW"></div>
+    <div>
+      <label class="form-label">Image</label>
+      <div class="img-upload-wrap">
+        <label class="img-upload-btn ${existing?.imageUrl?'has-img':''}" id="${id}-imgbtn">
+          <input type="file" class="file-input" accept="image/*" onchange="handleImageUpload(event,'${id}-url','${id}-prev','${id}-imgbtn')">
+          ${existing?.imageUrl?'✅':'📁'}
+        </label>
+        <img id="${id}-prev" class="img-preview ${existing?.imageUrl?'show':''}" src="${existing?.imageUrl||''}">
+        <input type="hidden" id="${id}-url" value="${existing?.imageUrl||''}">
+      </div>
+    </div>
+    <button class="btn btn-red btn-sm" style="align-self:flex-end" onclick="document.getElementById('${id}').remove()">✕</button>`;
+  list.appendChild(div);
+}
+
+async function savePromos() {
+  const promos=[];
+  document.querySelectorAll('#promos-list .menu-item-row').forEach(row=>{
+    const id=row.id;
+    const title=document.getElementById(`${id}-title`)?.value.trim();
+    if(!title) return;
+    promos.push({title,description:document.getElementById(`${id}-desc`)?.value||'',badgeText:document.getElementById(`${id}-badge`)?.value||'NEW',imageUrl:document.getElementById(`${id}-url`)?.value||'',isActive:true});
+  });
+  try{const r=await api('savePromotions',{promotions:promos});showToast(r.message,'success');}catch(e){showToast(e.message,'error');}
+}
+
+// ════════════════════════════════════════
+// DELIVERY CHARGES
+// ════════════════════════════════════════
+async function loadDelivery() {
+  try {
+    const charges = await api('getDeliveryCharges', {});
+    const rows = [];
+    for (const [key, map] of Object.entries(charges)) {
+      const [day, meal] = key.split('|');
+      for (const [phone, amount] of Object.entries(map)) {
+        const cust = [...allMeals, ...allBreakfasts, ...allSnacks].find(o=>o.phone===phone);
+        rows.push({ day, meal, phone, name: cust?.customerName||phone, amount });
+      }
+    }
+    document.getElementById('deliveryBody').innerHTML = rows.length ? rows.map(r=>`
+      <tr>
+        <td>${r.day}</td><td>${r.meal}</td>
+        <td>${r.name}</td><td>${r.phone}</td>
+        <td>₹${r.amount}</td>
+        <td><button class="btn btn-gray btn-sm" onclick="editDeliveryCharge('${r.phone}','${r.day}','${r.meal}',${r.amount})">✏️ Edit</button></td>
+      </tr>`).join('') : '<tr><td colspan="6" class="no-data">No delivery charges this week</td></tr>';
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+async function addDelivery() {
+  const day=document.getElementById('delDay').value;
+  const meal=document.getElementById('delMeal').value;
+  const amount=document.getElementById('delAmount').value;
+  if(!amount||Number(amount)<=0){showToast('Enter a valid amount','error');return;}
+  try{const r=await api('addDeliveryCharge',{day,mealType:meal,amount:Number(amount)});showToast(r.message,'success');loadDelivery();}
+  catch(e){showToast(e.message,'error');}
+}
+
+async function editDeliveryCharge(phone,day,meal,current) {
+  const newAmt=prompt(`Edit delivery charge for ${phone} (${day} ${meal}):`, current);
+  if(newAmt===null||isNaN(Number(newAmt))) return;
+  try{await api('updateDeliveryCharge',{phone,day,mealType:meal,amount:Number(newAmt)});showToast('Updated','success');loadDelivery();}
+  catch(e){showToast(e.message,'error');}
+}
+
+// ════════════════════════════════════════
+// BILLING
+// ════════════════════════════════════════
+async function initBilling() {
+  try {
+    const weeks = await api('getAvailableWeeks');
+    const sel = document.getElementById('weekSelector');
+    const prevVal = sel.value; // preserve any selected week across refreshes
+    sel.innerHTML = '<option value="">-- Stored Weeks --</option>' +
+      weeks.map(w=>`<option value="${w}">${w}</option>`).join('');
+    // Restore previously selected week if it still exists
+    if (prevVal && weeks.includes(prevVal)) {
+      sel.value = prevVal;
+      await loadBillsForWeek(prevVal);
+    } else {
+      await previewCurrentBills();
+    }
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+async function previewCurrentBills() {
+  try {
+    const r = await api('generateBills');
+    billingData = r.bills;
+    renderBillingCustomerList(r.bills);
+    showToast('Bills previewed for current week','success');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function loadBillsForWeek(weekLabel) {
+  if(!weekLabel) return;
+  try {
+    const bills = await api('getStoredBills',{weekLabel});
+    const map = {};
+    bills.forEach(b=>{ map[b.phone]=b; });
+    billingData = map;
+    renderBillingCustomerList(map);
+  } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+// Recalculate subtotal from line items — handles old stored bills where subtotal was saved as 0
+function effectiveBillTotal(b) {
+  if (b.subtotal && b.subtotal > 0) return b.subtotal;
+  return (b.meals||[]).reduce((s,m)=>s+(m.price||0),0)
+       + (b.snacks||[]).reduce((s,sn)=>s+(sn.total||0),0)
+       + (b.breakfasts||[]).reduce((s,bf)=>s+(bf.price||0),0)
+       + (b.delivery||[]).reduce((s,d)=>s+(d.amount||0),0);
+}
+
+function renderBillingCustomerList(bills) {
+  const list = document.getElementById('customerListBody');
+  const entries = Object.values(bills);
+  document.getElementById('customerCount').textContent = entries.length;
+
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="no-data">No bills for this period</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(b => `
+    <div class="customer-item" onclick="showBillDetail('${b.phone}')" id="ci-${b.phone}">
+      <div>
+        <div class="customer-item-name">${b.name||b.customerName}</div>
+        <div class="customer-item-phone">${b.phone}</div>
+      </div>
+      <div>
+        <div class="customer-item-amount">₹${effectiveBillTotal(b)}</div>
+        ${b.isPaid ? '<div class="paid-badge">Paid</div>' : ''}
+      </div>
+    </div>`).join('');
+}
+
+function filterCustomers(q) {
+  const items = document.querySelectorAll('.customer-item');
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function showBillDetail(phone) {
+  selectedBillCustomer = phone;
+  document.querySelectorAll('.customer-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(`ci-${phone}`)?.classList.add('active');
+
+  const bill = billingData[phone];
+  if (!bill) return;
+
+  const name = bill.name || bill.customerName;
+  const weekLabel = bill.weekLabel || document.getElementById('weekSelector').value || 'Current Week';
+  const isPaid = bill.isPaid;
+
+  const mealRows = (bill.meals||[]).map(m=>`
+    <div class="bill-row"><span>${m.day} ${m.type}${m.customization?(' — '+m.customization):''}</span><span>₹${m.price}</span></div>`).join('');
+  const snackRows = (bill.snacks||[]).map(s=>`
+    <div class="bill-row"><span>${s.item} × ${s.quantity}</span><span>₹${s.total}</span></div>`).join('');
+  const bfRows = (bill.breakfasts||[]).map(b=>`
+    <div class="bill-row"><span>${b.day} ${b.itemName} (${b.size})</span><span>₹${b.price}</span></div>`).join('');
+  const delRows = (bill.delivery||[]).map(d=>`
+    <div class="bill-row"><span>🚚 ${d.day} ${d.mealType} delivery</span><span>₹${d.amount}</span></div>`).join('');
+
+  const waText = encodeURIComponent(
+    `*The North Indian Lunch Box*\n` +
+    `Bill for *${name}* — ${weekLabel}\n\n` +
+    (bill.meals||[]).map(m=>`🍛 ${m.day} ${m.type}: ₹${m.price}`).join('\n') + '\n' +
+    (bill.breakfasts||[]).map(b=>`🍳 ${b.day} ${b.itemName} (${b.size}): ₹${b.price}`).join('\n') + '\n' +
+    (bill.snacks||[]).map(s=>`🍪 ${s.item}×${s.quantity}: ₹${s.total}`).join('\n') + '\n' +
+    (bill.delivery||[]).map(d=>`🚚 ${d.day} delivery: ₹${d.amount}`).join('\n') + '\n\n' +
+    `*Total: ₹${effectiveBillTotal(bill)}*\n` +
+    `Please pay at your earliest convenience. Thank you! 🙏`
+  );
+
+  document.getElementById('billDetail').innerHTML = `
+    <div class="bill-detail-head">
+      <div>
+        <div style="font-size:18px;font-weight:800">${name}</div>
+        <div style="font-size:13px;color:var(--gray)">${phone} · ${weekLabel}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${isPaid ? '<span class="paid-badge">✅ Paid</span>' : ''}
+        <button class="btn btn-gray btn-sm" onclick="editBill('${phone}','${weekLabel}')">✏️ Edit</button>
+      </div>
+    </div>
+    ${mealRows ? `<div class="bill-section"><div class="bill-section-title">🍛 Meals</div>${mealRows}</div>` : ''}
+    ${bfRows   ? `<div class="bill-section"><div class="bill-section-title">🍳 Breakfast</div>${bfRows}</div>` : ''}
+    ${snackRows? `<div class="bill-section"><div class="bill-section-title">🍪 Snacks</div>${snackRows}</div>` : ''}
+    ${delRows  ? `<div class="bill-section"><div class="bill-section-title">🚚 Delivery</div>${delRows}</div>` : ''}
+    <div class="bill-section">
+      <div class="bill-row total"><span>Total Due</span><span>₹${effectiveBillTotal(bill)}</span></div>
+    </div>
+    <div class="bill-actions">
+      <a href="https://wa.me/91${phone}?text=${waText}" target="_blank" class="btn wa-btn">📲 Send WhatsApp</a>
+      ${!isPaid ? `<button class="btn btn-green" onclick="markPaid('${phone}','${weekLabel}')">✅ Mark as Paid</button>` : ''}
+    </div>`;
+}
+
+async function markPaid(phone, weekLabel) {
+  if(!confirm(`Mark ${phone} as paid for ${weekLabel}?`)) return;
+  try {
+    const r = await api('markBillPaid',{phone,weekLabel});
+    showToast(r.message,'success');
+    const wl = document.getElementById('weekSelector').value;
+    if(wl) loadBillsForWeek(wl);
+    else previewCurrentBills();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function editBill(phone, weekLabel) {
+  const bill = billingData[phone];
+  if (!bill) return;
+  const newTotal = prompt(`Edit total for ${bill.name||bill.customerName} (${weekLabel}):`, bill.subtotal);
+  if (newTotal === null || isNaN(Number(newTotal))) return;
+  try {
+    await api('adminEditBill',{phone,weekLabel,billData:{subtotal:Number(newTotal)}});
+    showToast('Bill updated','success');
+    billingData[phone].subtotal = Number(newTotal);
+    renderBillingCustomerList(billingData);
+    showBillDetail(phone);
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function lockBillsNow() {
+  if(!confirm('Lock and store bills for the current week? This will also close ordering.')) return;
+  try {
+    const r = await api('lockBills');
+    showToast(r.message,'success');
+    await initBilling();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function sendWhatsAppBulk() {
+  const bills = Object.values(billingData).filter(b=>!b.isPaid);
+  if (bills.length===0) { showToast('No unpaid bills to send',''); return; }
+
+  // Open WhatsApp links one by one (browser will block multiple tabs — guide admin)
+  showToast(`Opening ${bills.length} WhatsApp chats...`, '');
+  bills.forEach((bill, i) => {
+    setTimeout(() => {
+      const name = bill.name || bill.customerName;
+      const weekLabel = bill.weekLabel || 'This week';
+      const waText = encodeURIComponent(
+        `*The North Indian Lunch Box*\n` +
+        `Dear *${name}*, your bill for *${weekLabel}* is ready.\n\n` +
+        `*Total Due: ₹${bill.subtotal}*\n\n` +
+        `Please pay at your earliest. Thank you! 🙏`
+      );
+      window.open(`https://wa.me/91${bill.phone}?text=${waText}`, '_blank');
+    }, i * 500);
+  });
+}
+
+// ════════════════════════════════════════
+// REVENUE
+// ════════════════════════════════════════
+async function loadRevenue(month) {
+  try {
+    const [history, monthly] = await Promise.all([api('getRevenue'), api('getMonthlyRevenue')]);
+
+    // Populate month dropdown — field is monthYear not month
+    const sel = document.getElementById('revenueMonth');
+    const months = [...new Set(history.map(r => r.monthYear || ''))].filter(Boolean);
+    const curVal = month || sel.value;
+    sel.innerHTML = '<option value="">All Months</option>' +
+      months.map(m => `<option value="${m}" ${m===curVal?'selected':''}>${m}</option>`).join('');
+
+    // Filter — field is monthYear not month
+    const filtered = curVal ? history.filter(r => r.monthYear === curVal) : history;
+    const body = document.getElementById('revenueBody');
+    body.innerHTML = filtered.length ? filtered.map(r => `
+      <tr>
+        <td>${r.paidAt || ''}</td>
+        <td><b>${r.customerName || ''}</b></td>
+        <td>${r.phone || ''}</td>
+        <td>${r.weekOf || ''}</td>
+        <td>₹${r.ordersAmount || 0}</td>
+        <td>₹${r.carryForwardCleared || 0}</td>
+        <td><b>₹${r.totalPaid || 0}</b></td>
+      </tr>`).join('') : '<tr><td colspan="7" class="no-data">No revenue records</td></tr>';
+
+    // Profit summary for selected month
+    if (curVal) {
+      try {
+        const profit = await api('getProfitSummary', { month: curVal });
+        document.getElementById('pc-revenue').textContent = `₹${profit.totalRevenue || 0}`;
+        document.getElementById('pc-expense').textContent = `₹${profit.totalExpenses || 0}`;
+        document.getElementById('pc-profit').textContent  = `₹${profit.profit  || 0}`;
+      } catch(e) {}
+    } else {
+      const totalRev = history.reduce((s,r) => s + (Number(r.totalPaid)||0), 0);
+      document.getElementById('pc-revenue').textContent = `₹${totalRev}`;
+      document.getElementById('pc-expense').textContent = 'Select month';
+      document.getElementById('pc-profit').textContent  = 'Select month';
+    }
+  } catch(e) { showToast('Failed to load revenue: ' + e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// EXPENSES
+// ════════════════════════════════════════
+async function loadExpenses(month) {
+  try {
+    const expenses = await api('getExpenses', { month: month || '' });
+
+    // Populate month dropdown
+    const sel = document.getElementById('expenseMonth');
+    const months = [...new Set(expenses.map(e => e.month || ''))].filter(Boolean);
+    const curVal = sel.value;
+    sel.innerHTML = '<option value="">All Months</option>' +
+      months.map(m => `<option value="${m}" ${m===curVal?'selected':''}>${m}</option>`).join('');
+
+    const body = document.getElementById('expensesBody');
+    body.innerHTML = expenses.length ? expenses.map(e => `
+      <tr id="exp-row-${e.rowIndex}">
+        <td>${e.date || ''}</td>
+        <td><span class="badge badge-gold">${e.category || ''}</span></td>
+        <td>${e.description || ''}</td>
+        <td><b>₹${e.amount || 0}</b></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-gray btn-sm" onclick="editExpenseRow(${e.rowIndex},'${(e.category||'').replace(/'/g,"\\'")}','${(e.description||'').replace(/'/g,"\\'")}',${e.amount},'${e.date||''}')">✏️ Edit</button>
+          <button class="btn btn-sm" style="background:var(--red-light);color:var(--red)" onclick="deleteExpenseRow(${e.rowIndex})">🗑️ Delete</button>
+        </td>
+      </tr>`).join('') : '<tr><td colspan="5" class="no-data">No expenses recorded</td></tr>';
+  } catch(e) { showToast('Failed to load expenses: ' + e.message, 'error'); }
+}
+
+async function addExpense() {
+  const category    = document.getElementById('expCategory').value;
+  const description = document.getElementById('expDesc').value.trim();
+  const amount      = Number(document.getElementById('expAmount').value);
+  const date        = document.getElementById('expDate').value;
+
+  if (!description || !amount || !date) { showToast('Fill in all fields', 'error'); return; }
+
+  try {
+    await api('addExpense', { category, description, amount, date });
+    showToast('✅ Expense recorded!', 'success');
+    document.getElementById('expDesc').value   = '';
+    document.getElementById('expAmount').value = '';
+    document.getElementById('expDate').value   = '';
+    loadExpenses();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function editExpenseRow(rowIndex, category, description, amount, dateStr) {
+  const newDesc   = prompt('Description:', description);
+  if (newDesc === null) return;
+  const newAmt    = prompt('Amount (₹):', amount);
+  if (newAmt === null || isNaN(Number(newAmt))) return;
+  const newCat    = prompt('Category (Ingredients/Packaging/Delivery/Gas/Fuel/Equipment/Miscellaneous):', category);
+  if (newCat === null) return;
+  try {
+    await api('updateExpense', { rowIndex, category: newCat, description: newDesc, amount: Number(newAmt), date: dateStr });
+    showToast('✅ Expense updated!', 'success');
+    loadExpenses(document.getElementById('expenseMonth').value);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function deleteExpenseRow(rowIndex) {
+  if (!confirm('Delete this expense? This cannot be undone.')) return;
+  try {
+    await api('deleteExpense', { rowIndex });
+    showToast('🗑️ Expense deleted.', 'success');
+    loadExpenses(document.getElementById('expenseMonth').value);
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type || ''}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast', 3000);
+}
+</script>
+</body>
+</html>
