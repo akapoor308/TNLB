@@ -798,6 +798,12 @@ function showTab(tab) {
   else if (tab==='revenue') loadRevenue();
   else if (tab==='expenses') loadExpenses();
 
+  // Reset auto-refresh countdown when switching to a refreshable tab
+  if (tab === 'overview' || tab === 'orders') {
+    refreshCountdown = 30;
+    document.getElementById('refreshLabel').textContent = 'Refreshing in 30s';
+  }
+
   // On mobile, close sidebar after navigation
   closeSidebar();
 }
@@ -850,18 +856,24 @@ function startAutoRefresh() {
   clearInterval(refreshInterval);
   refreshCountdown = 30;
   refreshInterval = setInterval(() => {
-    refreshCountdown--;
-    document.getElementById('refreshLabel').textContent = `Refreshing in ${refreshCountdown}s`;
-    if (refreshCountdown <= 0) {
-      forceRefresh();
-      refreshCountdown = 30;
+    const active = document.querySelector('.nav-item.active')?.id.replace('nav-','');
+    const isRefreshTab = active === 'overview' || active === 'orders';
+    if (isRefreshTab) {
+      refreshCountdown--;
+      document.getElementById('refreshLabel').textContent = `Refreshing in ${refreshCountdown}s`;
+      if (refreshCountdown <= 0) {
+        forceRefresh();
+        refreshCountdown = 30;
+      }
+    } else {
+      document.getElementById('refreshLabel').textContent = 'Auto-refresh paused';
     }
   }, 1000);
 }
 
 function forceRefresh() {
   const active = document.querySelector('.nav-item.active')?.id.replace('nav-','');
-  if (active) showTab(active);
+  if (active === 'overview' || active === 'orders') showTab(active);
   refreshCountdown = 30;
   document.getElementById('refreshLabel').textContent = 'Refreshing in 30s';
 }
@@ -1593,11 +1605,16 @@ function sendWhatsAppBulk() {
 // ════════════════════════════════════════
 async function loadRevenue(month) {
   try {
-    const [history, monthly] = await Promise.all([api('getRevenue'), api('getMonthlyRevenue')]);
+    const [history, monthly, allExpenses] = await Promise.all([
+      api('getRevenue'), api('getMonthlyRevenue'), api('getExpenses', { month: '' })
+    ]);
 
-    // Populate month dropdown — field is monthYear not month
+    // Populate month dropdown — merge months from revenue history AND expenses
     const sel = document.getElementById('revenueMonth');
-    const months = [...new Set(history.map(r => r.monthYear || ''))].filter(Boolean);
+    const revMonths = history.map(r => r.monthYear || '').filter(Boolean);
+    const expMonths = allExpenses.map(e => e.month || '').filter(Boolean);
+    const months = [...new Set([...revMonths, ...expMonths])]
+      .sort((a, b) => new Date('1 ' + b) - new Date('1 ' + a));
     const curVal = month || sel.value;
     sel.innerHTML = '<option value="">All Months</option>' +
       months.map(m => `<option value="${m}" ${m===curVal?'selected':''}>${m}</option>`).join('');
