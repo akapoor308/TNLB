@@ -603,6 +603,18 @@ img{display:block}
   body{max-width:700px}
   .meals-row{grid-template-columns:1fr 1fr}
 }
+
+/* ── ADMIN NOTICE BOX ── */
+.notice-box{
+  margin:12px 16px 0;
+  background:linear-gradient(135deg,#1e3a5f,#1a4a7a);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  display:flex;align-items:flex-start;gap:12px;color:#fff;
+  box-shadow:0 4px 20px rgba(26,74,122,0.3);
+  border-left:4px solid #60a5fa;
+}
+.notice-icon{font-size:22px;flex-shrink:0;margin-top:1px}
+.notice-text{font-size:13px;line-height:1.5;font-weight:500;opacity:0.95}
 </style>
 
 </head>
@@ -668,6 +680,12 @@ img{display:block}
 
   <!-- Promo Carousel -->
   <div class="promo-section" id="promoSection"></div>
+
+  <!-- Admin Notice Box -->
+  <div class="notice-box hidden" id="noticeBox">
+    <div class="notice-icon">📢</div>
+    <div class="notice-text" id="noticeText"></div>
+  </div>
 
   <!-- Unpaid Bills Banner -->
   <div class="unpaid-banner hidden" id="unpaidBanner">
@@ -958,12 +976,13 @@ async function requestNotifPermission() {
 
 async function loadAllData() {
   try {
-    const [weekStatus, menu, snacks, breakfast, promos] = await Promise.all([
+    const [weekStatus, menu, snacks, breakfast, promos, notice] = await Promise.all([
       api('checkWeekStatus'),
       api('getMenu'),
       api('getSnackMenu'),
       api('getBreakfastMenu'),
       api('getPromotions'),
+      api('getNotice'),
     ]);
 
     state.weekLocked = weekStatus.isLocked || !weekStatus.isDeployed;
@@ -972,6 +991,7 @@ async function loadAllData() {
     state.breakfastMenu = breakfast;
 
     renderPromos(promos);
+    renderNotice(notice);
     renderWeekBanner(weekStatus);
     renderMeals();
     renderBreakfast();
@@ -990,8 +1010,14 @@ async function loadCustomerData() {
     const bills = await api('getMyBills');
     if (bills && bills.length > 0) {
       const total = bills.reduce((s, b) => s + b.subtotal, 0);
-      document.getElementById('unpaidBanner').classList.remove('hidden');
-      document.getElementById('unpaidTotal').textContent = `₹${total} due`;
+      if (total > 0) {
+        document.getElementById('unpaidBanner').classList.remove('hidden');
+        document.getElementById('unpaidTotal').textContent = `₹${total} due`;
+      } else {
+        document.getElementById('unpaidBanner').classList.add('hidden');
+      }
+    } else {
+      document.getElementById('unpaidBanner').classList.add('hidden');
     }
   } catch (e) {}
 }
@@ -1044,6 +1070,20 @@ function renderPromos(promos) {
       document.getElementById(`dot-${i}`)?.classList.toggle('active', i === idx);
     });
   }, { passive: true });
+}
+
+// ════════════════════════════════════════
+// ADMIN NOTICE
+// ════════════════════════════════════════
+function renderNotice(notice) {
+  const box = document.getElementById('noticeBox');
+  if (!box) return;
+  if (notice && notice.isActive && notice.message) {
+    document.getElementById('noticeText').textContent = notice.message;
+    box.classList.remove('hidden');
+  } else {
+    box.classList.add('hidden');
+  }
 }
 
 // ════════════════════════════════════════
