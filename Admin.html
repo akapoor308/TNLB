@@ -509,6 +509,27 @@ th, td { padding: 10px 12px; }
 
       <!-- ════ PROMOTIONS TAB ════ -->
       <div id="tab-promotions" class="section-hidden">
+
+        <!-- ── IMPORTANT NOTICE ── -->
+        <div class="panel" style="margin-bottom:20px">
+          <div class="panel-head">
+            <div class="panel-title">📢 Important Notice</div>
+            <button class="btn btn-primary" onclick="saveNotice()">💾 Save Notice</button>
+          </div>
+          <div class="panel-body">
+            <div class="alert-box alert-info">This notice box appears below the promotions banner on the customer page. Leave it blank or disable it to hide it.</div>
+            <div class="form-group" style="margin-bottom:14px">
+              <label class="form-label">Notice Message</label>
+              <textarea id="noticeMessage" class="form-input" rows="3" style="resize:vertical;min-height:80px" placeholder="e.g. Office will be closed on Friday. No deliveries on 10th May."></textarea>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="noticeActive" style="width:18px;height:18px;accent-color:var(--saffron)">
+              <span>Show this notice to users</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- ── PROMOTIONS ── -->
         <div class="panel">
           <div class="panel-head">
             <div class="panel-title">📣 Promotions & Flash Ads</div>
@@ -1326,10 +1347,27 @@ function renderPromosEditor() {
 
 async function loadPromosFromSheet() {
   try {
-    const promos = await api('getPromotions');
+    const [promos, notice] = await Promise.all([
+      api('getPromotions'),
+      api('getNotice')
+    ]);
     document.getElementById('promos-list').innerHTML='';
     promos.forEach(p=>addPromoItem(p));
+    // Populate notice fields
+    if (notice) {
+      document.getElementById('noticeMessage').value = notice.message || '';
+      document.getElementById('noticeActive').checked = notice.isActive || false;
+    }
   } catch(e) { showToast('Failed: '+e.message,'error'); }
+}
+
+async function saveNotice() {
+  const message  = document.getElementById('noticeMessage').value.trim();
+  const isActive = document.getElementById('noticeActive').checked;
+  try {
+    const r = await api('saveNotice', { message, isActive });
+    showToast(r.message, 'success');
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 function addPromoItem(existing) {
