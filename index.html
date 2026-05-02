@@ -1079,7 +1079,9 @@ function renderNotice(notice) {
   const box = document.getElementById('noticeBox');
   if (!box) return;
   if (notice && notice.isActive && notice.message) {
-    document.getElementById('noticeText').textContent = notice.message;
+    // Preserve line breaks typed in the admin textarea
+    const safe = notice.message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('noticeText').innerHTML = safe.replace(/\n/g, '<br>');
     box.classList.remove('hidden');
   } else {
     box.classList.add('hidden');
