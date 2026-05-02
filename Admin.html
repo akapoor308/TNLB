@@ -1030,8 +1030,12 @@ async function cancelOrder(id, type) {
   if (!confirm('Cancel this order? It will be removed from the sheet immediately.')) return;
   try {
     await api('cancelOrder', { orderId: id, orderType: type });
+    // Remove instantly from local data so UI updates without waiting for GAS
+    if (type === 'meal')      allMeals     = allMeals.filter(o => String(o.id) !== String(id));
+    if (type === 'snack')     allSnacks    = allSnacks.filter(o => String(o.id) !== String(id));
+    if (type === 'breakfast') allBreakfasts = allBreakfasts.filter(o => String(o.id) !== String(id));
+    renderOrderTables();
     showToast('Order cancelled', 'success');
-    await loadOrders(); // Real-time refresh
   } catch(e) { showToast(e.message, 'error'); }
 }
 
