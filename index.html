@@ -604,6 +604,64 @@ img{display:block}
   .meals-row{grid-template-columns:1fr 1fr}
 }
 
+/* ── ORDER HISTORY ── */
+.hist-section{margin-bottom:20px}
+.hist-section-title{
+  font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;
+  color:var(--gray);padding:6px 0 10px;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:2px solid var(--border);margin-bottom:12px;
+}
+.hist-section-title span{font-size:18px}
+.hist-card{
+  background:#fff;border-radius:var(--radius-sm);
+  margin-bottom:10px;overflow:hidden;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+}
+.hist-card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;
+  background:linear-gradient(135deg,var(--dark),var(--dark2));
+}
+.hist-day-pill{
+  font-size:12px;font-weight:800;color:#fff;
+  display:flex;align-items:center;gap:6px;
+}
+.hist-price{
+  font-size:15px;font-weight:800;color:var(--gold);
+}
+.hist-card-body{padding:10px 14px}
+.hist-items{font-size:13px;color:var(--dark);line-height:1.5;margin-bottom:4px}
+.hist-custom{
+  font-size:11px;color:var(--saffron);font-weight:600;
+  background:var(--saffron-light);border-radius:6px;
+  padding:3px 8px;display:inline-block;margin-top:2px;
+}
+.hist-meta{font-size:11px;color:var(--gray);margin-top:4px}
+.hist-snack-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+}
+.hist-snack-row:last-child{border-bottom:none}
+.hist-snack-name{font-size:13px;font-weight:700;color:var(--dark)}
+.hist-snack-qty{font-size:12px;color:var(--gray);margin-top:2px}
+.hist-snack-price{font-size:14px;font-weight:800;color:var(--saffron)}
+.hist-bill-card{
+  background:linear-gradient(135deg,#7C2D12,#DC2626);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  margin-bottom:10px;color:#fff;
+  box-shadow:0 4px 16px rgba(220,38,38,0.25);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.hist-bill-info small{font-size:11px;opacity:0.8;display:block;margin-top:3px}
+.hist-bill-amt{font-size:22px;font-weight:800}
+.hist-empty{
+  text-align:center;padding:32px 16px;color:var(--gray);
+  font-size:14px;
+}
+.hist-empty-icon{font-size:40px;margin-bottom:8px;opacity:.5}
+
 /* ── ADMIN NOTICE BOX ── */
 .notice-box{
   margin:12px 16px 0;
@@ -1715,53 +1773,115 @@ function renderHistory(orders, bills) {
   const body = document.getElementById('historyBody');
   let html = '';
 
-  if (bills && bills.length > 0) {
-    html += `<div class="section-title" style="margin-bottom:12px"><span>💰</span> Unpaid Bills</div>`;
-    bills.forEach(b => {
+  // ── Unpaid Bills ──
+  const unpaidBills = (bills || []).filter(b => b.subtotal > 0);
+  if (unpaidBills.length > 0) {
+    html += `<div class="hist-section">
+      <div class="hist-section-title"><span>💰</span> Pending Payments</div>`;
+    unpaidBills.forEach(b => {
       html += `
-        <div class="unpaid-banner" style="margin:0 0 10px">
-          <h4>Week of ${b.weekLabel}</h4>
-          <div class="unpaid-total">₹${b.subtotal}</div>
-          <p style="font-size:11px">Locked on ${b.lockedAt}</p>
+        <div class="hist-bill-card">
+          <div class="hist-bill-info">
+            <div style="font-weight:700;font-size:14px">Week of ${b.weekLabel}</div>
+            <small>Locked on ${b.lockedAt}</small>
+          </div>
+          <div class="hist-bill-amt">₹${b.subtotal}</div>
         </div>`;
     });
+    html += `</div>`;
   }
 
-  if (orders && orders.orders && orders.orders.length > 0) {
-    html += `<div class="section-title" style="margin:16px 0 8px"><span>🍛</span> Meal Orders</div>`;
-    orders.orders.forEach(o => {
+  const mealOrders = (orders && orders.orders) || [];
+  const breakfasts  = (orders && orders.breakfasts) || [];
+  const snacks      = (orders && orders.snacks) || [];
+
+  // ── Lunch Orders ──
+  const lunches = mealOrders.filter(o => o.mealType === 'Lunch');
+  if (lunches.length > 0) {
+    html += `<div class="hist-section">
+      <div class="hist-section-title"><span>🌞</span> Lunch Orders</div>`;
+    lunches.forEach(o => {
+      html += renderMealHistCard(o);
+    });
+    html += `</div>`;
+  }
+
+  // ── Dinner Orders ──
+  const dinners = mealOrders.filter(o => o.mealType === 'Dinner');
+  if (dinners.length > 0) {
+    html += `<div class="hist-section">
+      <div class="hist-section-title"><span>🌙</span> Dinner Orders</div>`;
+    dinners.forEach(o => {
+      html += renderMealHistCard(o);
+    });
+    html += `</div>`;
+  }
+
+  // ── Breakfast Orders ──
+  if (breakfasts.length > 0) {
+    html += `<div class="hist-section">
+      <div class="hist-section-title"><span>🍳</span> Breakfast Orders</div>`;
+    breakfasts.forEach(b => {
       html += `
-        <div class="history-order-row">
-          <div class="history-order-name">${o.day} ${o.mealType} — ${o.items}</div>
-          <div class="history-order-detail">${o.customization || ''} · ₹${o.finalPrice}</div>
+        <div class="hist-card">
+          <div class="hist-card-header">
+            <div class="hist-day-pill">📅 ${b.day}</div>
+            <div class="hist-price">₹${b.price}</div>
+          </div>
+          <div class="hist-card-body">
+            <div class="hist-items">${b.itemName}</div>
+            <div class="hist-meta">Size: ${b.size}</div>
+          </div>
         </div>`;
     });
+    html += `</div>`;
   }
 
-  if (orders && orders.breakfasts && orders.breakfasts.length > 0) {
-    html += `<div class="section-title" style="margin:16px 0 8px"><span>🍳</span> Breakfast Orders</div>`;
-    orders.breakfasts.forEach(b => {
+  // ── Snacks Orders ──
+  if (snacks.length > 0) {
+    html += `<div class="hist-section">
+      <div class="hist-section-title"><span>🍪</span> Snack Orders</div>
+      <div class="hist-card">`;
+    snacks.forEach(s => {
       html += `
-        <div class="history-order-row">
-          <div class="history-order-name">${b.day} — ${b.itemName} (${b.size})</div>
-          <div class="history-order-detail">₹${b.price}</div>
+        <div class="hist-snack-row">
+          <div>
+            <div class="hist-snack-name">${s.item}</div>
+            <div class="hist-snack-qty">${s.quantity} pack${s.quantity > 1 ? 's' : ''}</div>
+          </div>
+          <div class="hist-snack-price">₹${s.total}</div>
         </div>`;
     });
+    html += `</div></div>`;
   }
 
-  if (orders && orders.snacks && orders.snacks.length > 0) {
-    html += `<div class="section-title" style="margin:16px 0 8px"><span>🍪</span> Snack Orders</div>`;
-    orders.snacks.forEach(s => {
-      html += `
-        <div class="history-order-row">
-          <div class="history-order-name">${s.item} × ${s.quantity}</div>
-          <div class="history-order-detail">₹${s.total}</div>
-        </div>`;
-    });
+  if (!html) {
+    html = `<div class="hist-empty">
+      <div class="hist-empty-icon">🍽️</div>
+      <p>No orders yet. Start ordering!</p>
+    </div>`;
   }
 
-  if (!html) html = `<p style="color:var(--gray);font-size:14px">No orders yet. Start ordering!</p>`;
   body.innerHTML = html;
+}
+
+function renderMealHistCard(o) {
+  const customParts = [];
+  if (o.customization) {
+    // customization is stored as a string like "No Rice + Free Chapati, +2 Extra Chapati, ×2"
+    if (o.customization.trim()) customParts.push(o.customization.trim());
+  }
+  return `
+    <div class="hist-card">
+      <div class="hist-card-header">
+        <div class="hist-day-pill">📅 ${o.day}</div>
+        <div class="hist-price">₹${o.finalPrice}</div>
+      </div>
+      <div class="hist-card-body">
+        <div class="hist-items">${o.items}</div>
+        ${customParts.length > 0 ? `<div class="hist-custom">🍱 ${customParts.join(' · ')}</div>` : ''}
+      </div>
+    </div>`;
 }
 
 // ════════════════════════════════════════
